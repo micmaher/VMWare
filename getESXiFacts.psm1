@@ -3,6 +3,32 @@
 # Michael Maher
 # Sends VM OS Type and Hypervisor OS Type
 
+function Get-OSType{
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true, Position=0)]
+		[string]
+		$OS
+    ) 
+    If ($os -like "*Windows*"){
+        return 'windows-corpit'
+        Write-Verbose "$os reassigned as windows-corpit" 
+        }
+    ElseIf ($os -like "*Linux*"){
+        return 'linux-corpit'
+        Write-Verbose "$os reassigned as linux-corpit" 
+        }
+    ElseIf ($os -like "*CentOS*"){
+        return 'linux-corpit'
+        Write-Verbose "$os reassigned as linux-corpit" 
+        }
+    ElseIf ($os -like "*ESXi*"){
+        return 'esxi-corpit'
+        Write-Verbose "$os reassigned as esxi-corpit" 
+        }
+    Else{return 'unknown'}    
+}
+
 
 function Import-VMWareCmdLetsISE{
     $p = [Environment]::GetEnvironmentVariable('PSModulePath')
@@ -216,7 +242,7 @@ function Get-ESXiFacts{
                         @{N="host_disk";E={(Convert-Size -From Bytes -To MB -Value ((Get-EsxCli -VMHost $hostname).storage.filesystem.list()| Where Type -like 'VMFS*' | select -ExpandProperty size))}}, # In MB
                         @{N="host_memory";E={[string]([System.Math]::Round((Convert-Size -From Bytes -To MB -Value ($_.Hardware.MemorySize)),0))}}, # Racks expects a string not an int in MB
                         @{N="host_sn";E={(Get-EsxCli -VMHost $hostname).hardware.platform.get().SerialNumber}},
-                        @{N="host_os";E={Get-RacksOS((Get-View –ViewType HostSystem -Property Config.Product | select {$_.Config.Product.FullName}).'$_.Config.Product.FullName')}},
+                        @{N="host_os";E={Get-OSType((Get-View –ViewType HostSystem -Property Config.Product | select {$_.Config.Product.FullName}).'$_.Config.Product.FullName')}},
                         # Unused Host Data
                         # @{N="host_hardware";E={$_.Hardware.SystemInfo.Vendor+ " " + $_.Hardware.SystemInfo.Model}},
                         # @{N="host_cpus";E={"PROC:" + $_.Hardware.CpuInfo.NumCpuPackages + " CORES:" + $_.Hardware.CpuInfo.NumCpuCores + " MHZ: " + [math]::round($_.Hardware.CpuInfo.Hz / 1000000, 0)}},
